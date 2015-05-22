@@ -1,0 +1,4 @@
+nose
+ipython
+requests
+requests_oauthlib

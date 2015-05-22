@@ -1,0 +1,3 @@
+
+class Pixiv(object):
+    pass
