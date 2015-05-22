@@ -28,8 +28,10 @@ class CacheFolder(object):
                 self.store(item, item.get_image())
 
     def cleanup(self, remove_thresh):
-        files = [p for p in os.listdir(self.path) if os.path.isfile(p)]
+        files = [os.path.join(self.path, name) for name in os.listdir(self.path)]
         for f in files:
+            if not os.path.isfile(f):
+                continue
             mtime = datetime.fromtimestamp(os.path.getmtime(f))
             if isinstance(remove_thresh, timedelta):
                 remove_thresh = datetime.now() + remove_thresh
