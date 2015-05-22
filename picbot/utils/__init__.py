@@ -1,12 +1,17 @@
 
-def uniq(iter):
+import itertools
+
+def uniq(*iters):
     """Make unique iterator with preserving orders. """
-    return UniqueIterator(iter)
+    return UniqueIterator(itertools.chain(*iters))
 
 class UniqueIterator(object):
     def __init__(self, source):
         self.source = source
         self._history = set()
+
+    def __iter__(self):
+        return self
 
     def __next__(self):
         next_candidate = next(self.source)

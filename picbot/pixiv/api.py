@@ -1,11 +1,13 @@
 from collections import deque
 import json
+from datetime import timedelta, datetime
+import itertools
 
 import requests
 
 from .connection import AuthConnection
 from .utils import format_date
-from picbot.pixiv import image
+from picbot.pixiv import models
 
 
 class API(object):
@@ -99,7 +101,10 @@ class Search(PagingAPIEndpoint):
 
     def parse_body(self, res: requests.Response):
         resobj = super().parse_body(res)
-        return map(image.create, resobj)
+
+        def result_mapper(obj):
+            return models.create_ranking(obj, self.api)
+        return map(result_mapper, resobj)
 
 
 class Ranking(PagingAPIEndpoint):
@@ -115,7 +120,7 @@ class Ranking(PagingAPIEndpoint):
             if category != 'all' or mode not in self.modes_for_all:
                 raise Exception("%s is not valid mode" % mode)
 
-    def __call__(self, category='all', mode='daily', date=None):
+    def __call__(self, category='all', mode='daily', date=None, size=None):
         self.validate_args(category, mode)
         path = 'ranking/' + category
         url = self.url(path=path)
@@ -127,12 +132,22 @@ class Ranking(PagingAPIEndpoint):
             'image_sizes': 'small,px_128x128,px_480mw,large',
         }
         if date:
+            if isinstance(date, timedelta):
+                date = datetime.now() + date
             params['date'] = format_date(date)
-        return PageIterator(self, url, params)
+
+        it = PageIterator(self, url, params)
+        if size:
+            return itertools.islice(it, size)
+        else:
+            return it
 
     def parse_body(self, res: requests.Response):
         resobj = super().parse_body(res)
-        return map(image.create_ranking, resobj[0]['works'])
+
+        def result_mapper(obj):
+            return models.create_ranking(obj, self.api)
+        return map(result_mapper, resobj[0]['works'])
 
 
 class PageIterator(object):

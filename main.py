@@ -1,17 +1,30 @@
 
-import picbot
+import os
+import json
+from datetime import timedelta
+import logging
+import itertools
 
+import picbot
 from picbot.utils import uniq
 
+import picbot.pixiv.connection
 
-pixiv = picbot.pixiv(username='foobar', password='hogehoge')
+logging.basicConfig(level=logging.DEBUG)
+here = os.path.dirname(__file__)
 
-rankings = uniq(
-    pixiv.ranking(date=-0)[:100] +
-    pixiv.ranking(date=-2)[:100] +
-    pixiv.ranking(date=-3)[:100]
-)
+CREDENTIALS_FILE = os.path.join(here, "private", "credentials.json")
+credentials = json.load(open(CREDENTIALS_FILE))
 
-default_sink = picbot.sink.Folder('~/Dropbox/Documents/picbot/default')
+pixiv = picbot.Pixiv(**credentials['pixiv'])
+
+
+def pixiv_ranking():
+    for i in range(5):
+        yield from pixiv.ranking(date=timedelta(days=-i), size=50)
+
+rankings = list(itertools.islice(uniq(pixiv_ranking()), 100))
+
+default_sink = picbot.FolderSink('~/Dropbox/Documents/picbot/default')
 default_sink.clear()
 default_sink.drain(rankings)
