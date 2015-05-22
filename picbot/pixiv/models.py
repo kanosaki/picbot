@@ -42,21 +42,24 @@ class Illust(AttrAccess):
         _, ext = os.path.splitext(path)
         return ext
 
+    @property
     def filename(self):
         name = "{}_{}{}".format(str(self.id), self.title, self.extension)
         return normalize_filename(name)
 
     def save_to_dir(self, dirpath, api=None):
         api = api or self.api
-        save_path = os.path.join(dirpath, self.filename())
+        save_path = os.path.join(dirpath, self.filename)
         self.save_to(save_path, api)
 
-    def save_to(self, path, api=None):
-        api = api or self.api
-        large_image = self.image_urls.large
-        res = api.public.get(large_image)
+    def save_to(self, path):
         with open(path, 'wb') as f:
-            f.write(res.content)
+            f.write(self.get_image())
+
+    def get_image(self):
+        large_image = self.image_urls.large
+        res = self.api.public.get(large_image)
+        return res.content
 
     def __eq__(self, other):
         if hasattr(other, 'id'):
@@ -66,6 +69,10 @@ class Illust(AttrAccess):
 
     def __hash__(self):
         return hash(self.id)
+
+    @property
+    def cache_id(self):
+        return "pixiv-{}{}".format(str(self.id), self.extension)
 
 
 class Manga(Illust):

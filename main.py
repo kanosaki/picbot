@@ -25,6 +25,13 @@ def pixiv_ranking():
 
 rankings = list(itertools.islice(uniq(pixiv_ranking()), 100))
 
-default_sink = picbot.FolderSink('~/Dropbox/Documents/picbot/default')
+cache = picbot.CacheFolder('/tmp/picbot')
+
+# prefetch for Dropbox sync optimization
+cache.drain(rankings)
+
+default_sink = picbot.FolderSink('~/Dropbox/Documents/picbot/default', cache)
 default_sink.clear()
 default_sink.drain(rankings)
+
+cache.cleanup(timedelta(days=-5))

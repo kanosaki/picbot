@@ -176,7 +176,10 @@ class PageIterator(object):
         if len(self.buffer) == 0:
             self.buffer_next_page()
         self.consumed_count += 1
-        return self.buffer.popleft()
+        try:
+            return self.buffer.popleft()
+        except IndexError:
+            raise StopIteration()
 
     def buffer_next_page(self):
         next_page = self.page + 1
