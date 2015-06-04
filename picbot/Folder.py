@@ -40,9 +40,10 @@ class CacheFolder(object):
 
 
 class FolderSink(object):
-    def __init__(self, path, cache: CacheFolder=None):
+    def __init__(self, path, cache=None, safe=True):
         self.path = os.path.expanduser(os.path.expandvars(path))
         self.cache = cache or VoidCache()
+        self.safe_name = safe
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
@@ -52,7 +53,10 @@ class FolderSink(object):
             if not image:
                 image = item.get_image()
                 self.cache.store(item, image)
-            path = os.path.join(self.path, item.filename)
+            if self.safe_name:
+                path = os.path.join(self.path, item.safe_filename)
+            else:
+                path = os.path.join(self.path, item.filename)
             open(path, 'wb').write(image)
 
     def clear(self):

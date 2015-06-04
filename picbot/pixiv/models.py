@@ -43,13 +43,21 @@ class Illust(AttrAccess):
         return ext
 
     @property
+    def safe_filename(self):
+        name = "{}{}".format(str(self.id), self.extension)
+        return normalize_filename(name)
+
+    @property
     def filename(self):
         name = "{}_{}{}".format(str(self.id), self.title, self.extension)
         return normalize_filename(name)
 
-    def save_to_dir(self, dirpath, api=None):
+    def save_to_dir(self, dirpath, api=None, safe=True):
         api = api or self.api
-        save_path = os.path.join(dirpath, self.filename)
+        if safe:
+            save_path = os.path.join(dirpath, self.safe_filename)
+        else:
+            save_path = os.path.join(dirpath, self.filename)
         self.save_to(save_path, api)
 
     def save_to(self, path):

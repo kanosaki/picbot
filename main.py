@@ -41,7 +41,7 @@ cache = picbot.CacheFolder('/tmp/picbot')
 # prefetch for Dropbox sync optimization
 cache.drain(rankings)
 
-default_sink = picbot.FolderSink('~/Dropbox/Documents/picbot/default', cache)
+default_sink = picbot.FolderSink('~/Dropbox/Documents/picbot/default', cache, safe=True)
 default_sink.clear()
 default_sink.drain(rankings)
 
