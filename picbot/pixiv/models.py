@@ -82,6 +82,13 @@ class Illust(AttrAccess):
     def cache_id(self):
         return "pixiv-{}{}".format(str(self.id), self.extension)
 
+    def metadata(self):
+        return {
+            'provider': 'pixiv',
+            'id': self.cache_id,
+            'metadata': dict(self)
+        }
+
 
 class Manga(Illust):
     pass

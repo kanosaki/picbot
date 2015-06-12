@@ -1,5 +1,6 @@
 import os.path
 from datetime import datetime, timedelta
+import json
 
 
 class CacheFolder(object):
@@ -28,7 +29,8 @@ class CacheFolder(object):
                 self.store(item, item.get_image())
 
     def cleanup(self, remove_thresh):
-        files = [os.path.join(self.path, name) for name in os.listdir(self.path)]
+        files = [os.path.join(self.path, name)
+                 for name in os.listdir(self.path)]
         for f in files:
             if not os.path.isfile(f):
                 continue
@@ -40,24 +42,35 @@ class CacheFolder(object):
 
 
 class FolderSink(object):
-    def __init__(self, path, cache=None, safe=True):
+    def __init__(self, path, cache=None,
+                 safe=True, metadata_file="metadata.json"):
         self.path = os.path.expanduser(os.path.expandvars(path))
         self.cache = cache or VoidCache()
         self.safe_name = safe
+        self.metadata_file = metadata_file
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
     def drain(self, it):
+        files_data = {}
         for item in it:
             image = self.cache.get(item)
             if not image:
                 image = item.get_image()
                 self.cache.store(item, image)
             if self.safe_name:
-                path = os.path.join(self.path, item.safe_filename)
+                fname = item.safe_filename
             else:
-                path = os.path.join(self.path, item.filename)
+                fname = item.filename
+            path = os.path.join(self.path, fname)
+            files_data[fname] = item.metadata()
             open(path, 'wb').write(image)
+        if self.metadata_file:
+            metadata_path = os.path.join(self.path, self.metadata_file)
+            json.dump(files_data,
+                      open(metadata_path, 'w'),
+                      indent=2,
+                      sort_keys=True)
 
     def clear(self):
         directory = self.path
@@ -78,4 +91,3 @@ class VoidCache(object):
 
     def get(self, item):
         pass
-
